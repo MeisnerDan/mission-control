@@ -122,6 +122,11 @@ export function buildSafeEnv(opts?: { agentTeams?: boolean }): Record<string, st
   if (process.env.HOME) safeEnv.HOME = process.env.HOME;
   if (process.env.USERPROFILE) safeEnv.USERPROFILE = process.env.USERPROFILE;
 
+  // Preserve USER/LOGNAME — required for Claude Code OAuth credential lookup
+  // Without USER, `claude -p` fails with "Not logged in" even when OAuth tokens exist
+  if (process.env.USER) safeEnv.USER = process.env.USER;
+  if (process.env.LOGNAME) safeEnv.LOGNAME = process.env.LOGNAME;
+
   // Preserve APPDATA for Windows applications
   if (process.env.APPDATA) safeEnv.APPDATA = process.env.APPDATA;
   if (process.env.LOCALAPPDATA) safeEnv.LOCALAPPDATA = process.env.LOCALAPPDATA;
