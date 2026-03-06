@@ -391,6 +391,8 @@ export default function InboxPage() {
               key={thread.key}
               className={`transition-all cursor-pointer ${hasUnread ? "border-primary/30 bg-primary/5" : "bg-card/50"}`}
               onClick={() => {
+                // Don't collapse if the user is selecting text
+                if (window.getSelection()?.toString()) return;
                 setExpandedThread(isExpanded ? null : thread.key);
                 if (!isExpanded) handleMarkThreadRead(thread);
               }}
