@@ -3,7 +3,7 @@
 import { useEffect, useCallback, useState, useRef } from "react";
 import {
   X, Trash2, ListChecks, Link2, CheckCircle2, Rocket,
-  Send, Clock, MessageSquare, Activity,
+  Send, Clock, MessageSquare, Activity, Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskForm, type TaskFormData } from "@/components/task-form";
@@ -28,6 +28,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { apiFetch } from "@/lib/api-client";
 
 const quadrantLabels: Record<string, { label: string; color: string }> = {
   do: { label: "DO", color: "bg-quadrant-do/20 text-quadrant-do border-quadrant-do/30" },
@@ -121,6 +122,20 @@ export function TaskDetailPanel({ task, projects, goals, allTasks, onUpdate, onD
     [task, agents, onUpdate, onClose]
   );
 
+  const handleMarkReviewed = useCallback(async () => {
+    try {
+      await apiFetch("/api/tasks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: task.id, reviewed: true }),
+      });
+      toast.success("Marked as reviewed");
+      onClose();
+    } catch {
+      toast.error("Failed to mark reviewed");
+    }
+  }, [task.id, onClose]);
+
   const handleAddComment = useCallback(async () => {
     const trimmed = commentText.trim();
     if (!trimmed) return;
@@ -133,7 +148,7 @@ export function TaskDetailPanel({ task, projects, goals, allTasks, onUpdate, onD
     };
     const existingComments = task.comments ?? [];
     try {
-      await fetch("/api/tasks", {
+      await apiFetch("/api/tasks", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -249,6 +264,20 @@ export function TaskDetailPanel({ task, projects, goals, allTasks, onUpdate, onD
             )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            {/* Mark reviewed button — shown for done agent tasks not yet reviewed */}
+            {task.kanban === "done" && task.assignedTo && task.assignedTo !== "me" && !task.reviewed && (
+              <Tip content="Mark as reviewed — removes from Attention Required">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-green-500 hover:bg-green-500/10"
+                  aria-label="Mark as reviewed"
+                  onClick={handleMarkReviewed}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </Tip>
+            )}
             {/* Deploy button */}
             <DropdownMenu>
               <Tip content="Deploy to agent">
