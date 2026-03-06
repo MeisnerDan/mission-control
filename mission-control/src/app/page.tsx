@@ -126,6 +126,7 @@ export default function CommandCenterPage() {
   const unreadReports = unreadMessages.filter((m) => m.type === "report");
   const recentCompletions = tasks.filter(
     (t) => t.kanban === "done" && t.assignedTo && t.assignedTo !== "me" && t.completedAt &&
+    !t.reviewed &&
     (Date.now() - new Date(t.completedAt).getTime()) < 7 * 24 * 60 * 60 * 1000
   );
   const attentionItems = [
