@@ -141,6 +141,11 @@ export function buildSafeEnv(opts?: { agentTeams?: boolean }): Record<string, st
     if (process.env.PATHEXT) safeEnv.PATHEXT = process.env.PATHEXT;
   }
 
+  // macOS: USER and LOGNAME are needed for OAuth credential lookup via Keychain.
+  // Without USER, `claude -p` cannot find stored OAuth tokens and fails with "Not logged in".
+  if (process.env.USER) safeEnv.USER = process.env.USER;
+  if (process.env.LOGNAME) safeEnv.LOGNAME = process.env.LOGNAME;
+
   // Agent Teams: experimental multi-agent coordination
   if (opts?.agentTeams) {
     safeEnv.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1";

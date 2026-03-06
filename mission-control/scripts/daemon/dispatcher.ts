@@ -5,6 +5,7 @@ import { logger } from "./logger";
 import { AgentRunner, parseClaudeOutput } from "./runner";
 import { HealthMonitor } from "./health";
 import { buildTaskPrompt, buildScheduledPrompt, getPendingTasks, isTaskUnblocked, hasPendingDecision } from "./prompt-builder";
+import { handleTaskCompletion, markTaskInProgress } from "./bookkeeping";
 import type { DaemonConfig, MissionsFile } from "./types";
 
 const DATA_DIR = path.resolve(__dirname, "../../data");
@@ -225,6 +226,9 @@ export class Dispatcher {
 
       const prompt = buildTaskPrompt(agentId, task);
 
+      // Mark task as in-progress before spawning
+      markTaskInProgress(taskId);
+
       // Start tracking the session
       const sessionId = this.health.startSession(agentId, taskId, "task", 0);
 
@@ -260,6 +264,8 @@ export class Dispatcher {
 
         if (result.exitCode === 0 && !result.timedOut) {
           logger.info("dispatcher", `Task ${taskId} completed successfully by ${agentId}`);
+          // Mark task done, post inbox report, log activity, regen context
+          handleTaskCompletion(taskId, agentId, result.stdout);
         } else {
           this.handleFailure(taskId, agentId, result);
         }
