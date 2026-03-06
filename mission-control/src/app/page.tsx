@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Plus, CheckSquare, Target, Lightbulb, FolderOpen, Sparkles,
   Mail, HelpCircle, Activity, User, Search, Code, Megaphone, BarChart3,
   AlertTriangle, CircleDot, ShieldAlert, Rocket, Users, Zap, Database, Square,
+  BrainCircuit, LogIn, LogOut, RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,91 @@ export default function CommandCenterPage() {
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showCreateGoal, setShowCreateGoal] = useState(false);
+
+  // Claude plan usage
+  const [claudeAuth, setClaudeAuth] = useState<{ authenticated: boolean } | null>(null);
+  const [claudePlanUsage, setClaudePlanUsage] = useState<{
+    five_hour?: { utilization?: number; resets_at?: string };
+    seven_day?: { utilization?: number; resets_at?: string };
+  } | null>(null);
+  const [claudeAuthStep, setClaudeAuthStep] = useState<"idle" | "awaiting-code">("idle");
+  const [claudeCode, setClaudeCode] = useState("");
+  const [claudeAuthError, setClaudeAuthError] = useState<string | null>(null);
+  const [claudeUsageLoading, setClaudeUsageLoading] = useState(false);
+  const [claudeRateLimitedUntil, setClaudeRateLimitedUntil] = useState<number | null>(null);
+
+  const USAGE_CACHE_KEY = "claude-plan-usage-cache";
+  const USAGE_CACHE_TTL = 30 * 60 * 1000;
+
+  const fetchClaudePlanUsage = useCallback(async (force = false) => {
+    if (!force) {
+      try {
+        const cached = sessionStorage.getItem(USAGE_CACHE_KEY);
+        if (cached) {
+          const { ts, data } = JSON.parse(cached);
+          if (Date.now() - ts < USAGE_CACHE_TTL) { setClaudePlanUsage(data); return; }
+        }
+      } catch { /* ignore */ }
+    }
+    setClaudeUsageLoading(true);
+    try {
+      const res = await apiFetch("/api/claude-usage");
+      if (res.ok) {
+        const data = await res.json();
+        setClaudePlanUsage(data);
+        try { sessionStorage.setItem(USAGE_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch { /* ignore */ }
+      } else if (res.status === 401) {
+        setClaudeAuth({ authenticated: false });
+        setClaudePlanUsage(null);
+        try { sessionStorage.removeItem(USAGE_CACHE_KEY); } catch { /* ignore */ }
+      } else if (res.status === 429) {
+        const until = Date.now() + 30 * 60 * 1000;
+        setClaudeRateLimitedUntil(until);
+        try {
+          const existing = sessionStorage.getItem(USAGE_CACHE_KEY);
+          if (existing) { const p = JSON.parse(existing); sessionStorage.setItem(USAGE_CACHE_KEY, JSON.stringify({ ...p, ts: until })); }
+        } catch { /* ignore */ }
+      }
+    } catch { /* ignore */ } finally { setClaudeUsageLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    apiFetch("/api/claude-auth").then(async (res) => {
+      if (res.ok) {
+        const data = await res.json() as { authenticated: boolean };
+        setClaudeAuth(data);
+        if (data.authenticated) fetchClaudePlanUsage();
+      }
+    }).catch(() => {});
+  }, [fetchClaudePlanUsage]);
+
+  const handleClaudeSignIn = async () => {
+    setClaudeAuthError(null);
+    const res = await apiFetch("/api/claude-auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "start" }) });
+    if (res.ok) { const { url } = await res.json() as { url: string }; window.open(url, "_blank"); setClaudeAuthStep("awaiting-code"); }
+  };
+
+  const handleClaudeExchange = async () => {
+    if (!claudeCode.trim()) return;
+    setClaudeAuthError(null);
+    const res = await apiFetch("/api/claude-auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "exchange", code: claudeCode.trim() }) });
+    if (res.ok) { setClaudeAuth({ authenticated: true }); setClaudeAuthStep("idle"); setClaudeCode(""); fetchClaudePlanUsage(); }
+    else { const d = await res.json() as { error?: string }; setClaudeAuthError(d.error ?? "Exchange failed"); }
+  };
+
+  const handleClaudeSignOut = async () => {
+    await apiFetch("/api/claude-auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "signout" }) });
+    setClaudeAuth({ authenticated: false }); setClaudePlanUsage(null); setClaudeAuthStep("idle");
+  };
+
+  function formatResetTime(resetsAt?: string): string {
+    if (!resetsAt) return "";
+    const diff = new Date(resetsAt).getTime() - Date.now();
+    if (diff <= 0) return "resetting...";
+    const h = Math.floor(diff / 3_600_000);
+    const m = Math.floor((diff % 3_600_000) / 60_000);
+    return h > 0 ? `resets in ${h}h ${m}m` : `resets in ${m}m`;
+  }
 
   // Derived data from batched /api/dashboard response
   const tasks = data?.tasks ?? [];
@@ -417,7 +503,7 @@ export default function CommandCenterPage() {
       </Link>
 
       {/* Stats Bar */}
-      <div role="region" aria-label="Stats overview" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div role="region" aria-label="Stats overview" className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
         <Card className="bg-card/50">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -458,7 +544,7 @@ export default function CommandCenterPage() {
           </CardContent>
         </Card>
         <Link href="/brain-dump">
-          <Card className="bg-card/50 cursor-pointer hover:border-primary/30 transition-all">
+          <Card className="bg-card/50 cursor-pointer hover:border-primary/30 transition-all h-full">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Lightbulb className="h-4 w-4 text-primary" />
@@ -470,6 +556,69 @@ export default function CommandCenterPage() {
             </CardContent>
           </Card>
         </Link>
+
+        {/* Claude Plan Usage */}
+        <Card className={cn("bg-card/50", claudePlanUsage?.five_hour?.utilization && claudePlanUsage.five_hour.utilization > 80 && "border-orange-500/30", !claudeAuth?.authenticated && claudeAuthStep === "idle" && "cursor-pointer hover:border-primary/30 transition-all")} onClick={() => { if (!claudeAuth?.authenticated && claudeAuthStep === "idle") handleClaudeSignIn(); }}>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <BrainCircuit className="h-4 w-4 text-primary" />
+            </div>
+            {claudeAuth?.authenticated && claudePlanUsage ? (
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <div className="flex items-center justify-between mb-0.5">
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Claude Plan</p>
+                  <div className="flex gap-0.5">
+                    <button className="p-0.5 rounded hover:bg-accent" onClick={(e) => { e.stopPropagation(); fetchClaudePlanUsage(true); }}>
+                      <RefreshCw className={cn("h-2.5 w-2.5 text-muted-foreground", claudeUsageLoading && "animate-spin")} />
+                    </button>
+                    <button className="p-0.5 rounded hover:bg-accent" onClick={(e) => { e.stopPropagation(); handleClaudeSignOut(); }}>
+                      <LogOut className="h-2.5 w-2.5 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                    <span>5h session</span>
+                    <span className={cn("tabular-nums font-semibold", (claudePlanUsage.five_hour?.utilization ?? 0) > 80 ? "text-orange-400" : "text-foreground")}>
+                      {Math.round(claudePlanUsage.five_hour?.utilization ?? 0)}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className={cn("h-full rounded-full", (claudePlanUsage.five_hour?.utilization ?? 0) > 80 ? "bg-orange-500" : "bg-primary")} style={{ width: `${Math.min(100, Math.round(claudePlanUsage.five_hour?.utilization ?? 0))}%` }} />
+                  </div>
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                    <span>7d window</span>
+                    <span className={cn("tabular-nums font-semibold", (claudePlanUsage.seven_day?.utilization ?? 0) > 80 ? "text-orange-400" : "text-foreground")}>
+                      {Math.round(claudePlanUsage.seven_day?.utilization ?? 0)}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className={cn("h-full rounded-full", (claudePlanUsage.seven_day?.utilization ?? 0) > 80 ? "bg-orange-500" : "bg-primary")} style={{ width: `${Math.min(100, Math.round(claudePlanUsage.seven_day?.utilization ?? 0))}%` }} />
+                  </div>
+                </div>
+              </div>
+            ) : claudeAuthStep === "awaiting-code" ? (
+              <div className="flex-1 min-w-0 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                <p className="text-xs font-medium">Paste code from browser</p>
+                <div className="flex gap-1.5">
+                  <input className="flex-1 h-7 rounded-md border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring" placeholder="code#state" value={claudeCode} onChange={(e) => setClaudeCode(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleClaudeExchange()} autoFocus />
+                  <Button size="sm" className="h-7 text-xs px-2" onClick={handleClaudeExchange} disabled={!claudeCode.trim()}>OK</Button>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={() => { setClaudeAuthStep("idle"); setClaudeCode(""); setClaudeAuthError(null); }}>✕</Button>
+                </div>
+                {claudeAuthError && <p className="text-[10px] text-destructive">{claudeAuthError}</p>}
+              </div>
+            ) : (
+              <div>
+                <p className="text-xs font-medium">Claude Plan</p>
+                <p className="text-xs text-muted-foreground">
+                  {claudeRateLimitedUntil ? `Rate limited · ${formatResetTime(new Date(claudeRateLimitedUntil).toISOString())}` : claudeAuth?.authenticated ? "Loading…" : "Click to connect"}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Attention Required */}
