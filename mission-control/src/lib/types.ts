@@ -182,6 +182,7 @@ export interface Task {
   updatedAt: string;
   completedAt: string | null;
   deletedAt: string | null;
+  reviewed?: boolean;
 }
 
 export interface TasksFile {

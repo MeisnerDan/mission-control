@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { Inbox, Send, User, Search, Code, Megaphone, BarChart3, Mail, MailOpen, Archive, Plus, Reply, MessageSquare, ChevronRight, ChevronDown, Loader2, Bot, Square } from "lucide-react";
+import { Inbox, Send, User, Search, Code, Megaphone, BarChart3, Mail, MailOpen, Archive, Plus, Reply, Forward, MessageSquare, ChevronRight, ChevronDown, Loader2, Bot, Square } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -220,6 +220,19 @@ export default function InboxPage() {
     setComposeOpen(true);
   };
 
+  const handleForward = (msg: InboxMessage) => {
+    // Default to developer — user picks the real recipient in the compose dialog
+    setComposeTo("developer");
+    setComposeType("update");
+    const baseSubject = msg.subject.replace(/^(Re:\s*|Fwd:\s*)*/i, "").trim();
+    setComposeSubject(`Fwd: ${baseSubject}`);
+    setComposeTaskId(msg.taskId ?? "none");
+    const from = msg.from === "me" ? "me" : msg.from;
+    const date = new Date(msg.createdAt).toLocaleString();
+    setComposeBody(`\n\n--- Forwarded message ---\nFrom: ${from}\nDate: ${date}\nSubject: ${msg.subject}\n\n${msg.body}`);
+    setComposeOpen(true);
+  };
+
   const triggerAutoRespond = useCallback(async (messageId: string, agentName: string, threadKey?: string) => {
     try {
       const res = await fetch("/api/inbox/respond", {
@@ -391,6 +404,8 @@ export default function InboxPage() {
               key={thread.key}
               className={`transition-all cursor-pointer ${hasUnread ? "border-primary/30 bg-primary/5" : "bg-card/50"}`}
               onClick={() => {
+                // Don't collapse if the user is selecting text
+                if (window.getSelection()?.toString()) return;
                 setExpandedThread(isExpanded ? null : thread.key);
                 if (!isExpanded) handleMarkThreadRead(thread);
               }}
@@ -504,6 +519,20 @@ export default function InboxPage() {
                         >
                           <Reply className="h-3 w-3" />
                           Reply
+                        </Button>
+                      </Tip>
+                      <Tip content="Forward to another agent">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleForward(thread.latest);
+                          }}
+                        >
+                          <Forward className="h-3 w-3" />
+                          Forward
                         </Button>
                       </Tip>
                       <Tip content={isMulti ? "Archive all messages in thread" : "Archive this message"}>
