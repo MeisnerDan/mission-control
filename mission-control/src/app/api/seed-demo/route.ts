@@ -3,6 +3,7 @@ import {
   saveTasks, saveGoals, saveProjects, saveBrainDump,
   saveActivityLog, saveInbox, saveDecisions,
   mutateFieldMissions, mutateFieldTasks, mutateFieldActivityLog,
+  mutateFieldServices,
 } from "@/lib/data";
 
 export async function POST() {
@@ -363,6 +364,57 @@ export async function POST() {
         createdAt: daysAgo(1),
       },
     ],
+  });
+
+  // ─── Field Ops: Services (saved but not connected) ────────────────────────
+  await mutateFieldServices(async (data) => {
+    data.services = [
+      {
+        id: "twitter",
+        name: "Twitter / X",
+        mcpPackage: "@mbelinky/x-mcp-server",
+        status: "disconnected",
+        authType: "oauth2",
+        credentialId: null,
+        riskLevel: "medium",
+        capabilities: ["post-tweets", "search", "analytics", "reply", "delete"],
+        allowedAgents: [],
+        config: {},
+        catalogId: "twitter",
+        installedAt: daysAgo(3),
+        lastUsed: null,
+      },
+      {
+        id: "linkedin",
+        name: "LinkedIn",
+        mcpPackage: "mcp-linkedin",
+        status: "disconnected",
+        authType: "oauth2",
+        credentialId: null,
+        riskLevel: "medium",
+        capabilities: ["post-updates", "company-pages", "analytics", "messaging"],
+        allowedAgents: [],
+        config: {},
+        catalogId: "linkedin",
+        installedAt: daysAgo(3),
+        lastUsed: null,
+      },
+      {
+        id: "reddit",
+        name: "Reddit",
+        mcpPackage: "",
+        status: "disconnected",
+        authType: "oauth2",
+        credentialId: null,
+        riskLevel: "medium",
+        capabilities: ["post-to-subreddit", "comment", "reply", "search", "monitor-mentions"],
+        allowedAgents: [],
+        config: {},
+        catalogId: "reddit",
+        installedAt: daysAgo(3),
+        lastUsed: null,
+      },
+    ];
   });
 
   // ─── Field Ops: Missions ──────────────────────────────────────────────────

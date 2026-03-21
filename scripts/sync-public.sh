@@ -38,6 +38,7 @@ EXCLUDE_FILES=(
   "mission-control/docs/logo.png"
   "mission-control/docs/logo.svg"
   ".claude/launch.json"
+  "scripts/start-mc-test.js"
 )
 
 # Personal data files — restored from public-launch HEAD after overlay (empty schemas)

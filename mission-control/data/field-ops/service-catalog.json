@@ -9,7 +9,7 @@
       "category": "social-media",
       "mcpPackage": "@mbelinky/x-mcp-server",
       "authType": "oauth2",
-      "riskLevel": "high",
+      "riskLevel": "medium",
       "capabilities": ["post-tweets", "search", "analytics", "reply", "delete"],
       "configFields": [
         { "key": "clientId", "label": "Client ID", "type": "text", "required": true, "placeholder": "Your X API Client ID", "helpText": "Found in your X Developer Portal under Keys and Tokens" },
@@ -40,7 +40,7 @@
       "category": "social-media",
       "mcpPackage": "mcp-linkedin",
       "authType": "oauth2",
-      "riskLevel": "high",
+      "riskLevel": "medium",
       "capabilities": ["post-updates", "company-pages", "analytics", "messaging"],
       "configFields": [
         { "key": "clientId", "label": "Client ID", "type": "text", "required": true, "placeholder": "LinkedIn App Client ID" },
@@ -70,7 +70,7 @@
       "category": "social-media",
       "mcpPackage": "facebook-mcp-server",
       "authType": "oauth2",
-      "riskLevel": "high",
+      "riskLevel": "medium",
       "capabilities": ["page-posts", "comment-moderation", "insights", "scheduling"],
       "configFields": [
         { "key": "appId", "label": "App ID", "type": "text", "required": true, "placeholder": "Facebook App ID" },
@@ -156,7 +156,7 @@
       "category": "social-media",
       "mcpPackage": "ayrshare-mcp",
       "authType": "api-key",
-      "riskLevel": "high",
+      "riskLevel": "medium",
       "capabilities": ["multi-platform-post", "scheduling", "analytics", "auto-hashtags"],
       "configFields": [
         { "key": "apiKey", "label": "Ayrshare API Key", "type": "password", "required": true, "placeholder": "Your Ayrshare API Key" }
@@ -1229,7 +1229,7 @@
       "category": "social-media",
       "mcpPackage": null,
       "authType": "oauth2",
-      "riskLevel": "high",
+      "riskLevel": "medium",
       "capabilities": ["post-to-subreddit", "comment", "reply", "search", "monitor-mentions"],
       "configFields": [
         { "key": "clientId", "label": "Client ID", "type": "text", "required": true, "placeholder": "Your Reddit App Client ID", "helpText": "Found in your Reddit app preferences under the app name" },
@@ -1262,7 +1262,7 @@
       "category": "social-media",
       "mcpPackage": null,
       "authType": "oauth2",
-      "riskLevel": "high",
+      "riskLevel": "medium",
       "capabilities": ["upload-video", "analytics", "trending-sounds", "video-management"],
       "configFields": [
         { "key": "clientKey", "label": "Client Key", "type": "text", "required": true, "placeholder": "Your TikTok App Client Key", "helpText": "Found in your TikTok Developer Portal app settings" },

@@ -143,6 +143,18 @@ export async function POST(request: Request) {
     );
   }
 
+  // ── 4a. Check service is connected ──
+  if (service && service.status !== "connected") {
+    return NextResponse.json(
+      {
+        error: `${service.name} is not connected. Connect it in Field Ops → Services before ${dryRun ? "testing" : "executing"} tasks.`,
+        serviceId: service.id,
+        serviceStatus: service.status,
+      },
+      { status: 400 },
+    );
+  }
+
   // ── 4b. Rate limit execution per service ──
   if (service) {
     const rateCheck = executionRateLimiter.checkLimit(service.id);
