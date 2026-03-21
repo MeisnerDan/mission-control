@@ -18,6 +18,19 @@
 
 <p align="center"><img src="mission-control/docs/demo.gif" alt="Mission Control Demo" width="800" /></p>
 
+<div align="center">
+<br/>
+
+**Idea** · · · **Research** · · · **Go / No-Go** · · · **Build MVP** · · · **Launch**
+
+You jot down a raw idea. Agents research the market and deliver a go/no-go report.<br/>
+You give the green light. Agents build the MVP. You review it and say ship it.<br/><br/>
+**They deploy the app, post to social media, run ad campaigns,<br/>set up payments, and keep it running.**<br/>
+You made three decisions. They did everything else.
+
+<br/>
+</div>
+
 ---
 
 ## Why This Exists
