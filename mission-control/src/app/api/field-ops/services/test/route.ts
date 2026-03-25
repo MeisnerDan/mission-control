@@ -154,7 +154,9 @@ export async function POST(request: Request) {
 
   // ── 8. Run health check via adapter ──
   try {
-    const result = await adapter.healthCheck(service, credentials);
+    // Merge plaintext config (e.g. apiKey) with vault-decrypted secrets
+    const merged = { ...service.config, ...credentials };
+    const result = await adapter.healthCheck(service, merged);
 
     await logTest(serviceId, adapter.name, result.ok, result.message);
 

@@ -4,31 +4,32 @@
   "services": [
     {
       "id": "twitter",
-      "name": "Twitter / X",
-      "description": "Post tweets, search content, track analytics, and manage your X presence through automated agents.",
+      "name": "X",
+      "description": "Create posts, search content, track analytics, and manage your X presence through automated agents.",
       "category": "social-media",
       "mcpPackage": "@mbelinky/x-mcp-server",
       "authType": "oauth2",
       "riskLevel": "medium",
-      "capabilities": ["post-tweets", "search", "analytics", "reply", "delete"],
+      "capabilities": ["create-posts", "search", "analytics", "reply", "delete"],
       "configFields": [
-        { "key": "clientId", "label": "Client ID", "type": "text", "required": true, "placeholder": "Your X API Client ID", "helpText": "Found in your X Developer Portal under Keys and Tokens" },
-        { "key": "clientSecret", "label": "Client Secret", "type": "password", "required": true, "placeholder": "Your X API Client Secret" },
-        { "key": "accessToken", "label": "Access Token", "type": "password", "required": true, "placeholder": "OAuth 2.0 Access Token" },
-        { "key": "accessTokenSecret", "label": "Access Token Secret", "type": "password", "required": true, "placeholder": "OAuth 2.0 Access Token Secret" }
+        { "key": "apiKey", "label": "API Key", "type": "text", "required": true, "placeholder": "Your X API Key", "helpText": "Found in console.x.com → your App → API Key and Secret" },
+        { "key": "apiSecret", "label": "API Key Secret", "type": "password", "required": true, "placeholder": "Your X API Key Secret" },
+        { "key": "accessToken", "label": "Access Token", "type": "password", "required": true, "placeholder": "OAuth 1.0a Access Token" },
+        { "key": "accessTokenSecret", "label": "Access Token Secret", "type": "password", "required": true, "placeholder": "OAuth 1.0a Access Token Secret" }
       ],
       "setupGuide": {
         "steps": [
-          "Go to developer.x.com and sign in with your X account.",
-          "Create a new Project and App in the Developer Portal.",
-          "Navigate to Keys and Tokens and generate your API credentials.",
-          "Under User Authentication Settings, enable OAuth 2.0.",
-          "Set the callback URL to http://localhost:3000/api/field-ops/callback/twitter.",
-          "Copy the Client ID, Client Secret, Access Token, and Access Token Secret into the fields below."
+          "Go to console.x.com and sign in with your X account.",
+          "Complete the onboarding: describe your use case (what your app does and how it will use the API), accept the Developer Agreement & Policy, and click Submit.",
+          "You'll land on the Developer Console Dashboard. Click \"Buy Credits\" to add API credits to your account ($5 is enough to start — posting costs $0.01 per post).",
+          "Click \"Apps\" in the left sidebar. An app was auto-created during onboarding. Click on it to open the credentials panel.",
+          "Before generating tokens, click \"Set up\" under \"User authentication settings\" at the bottom of the panel. Configure: App permissions → Read and write; Type of App → Web App, Automated App or Bot; Callback URI → http://localhost:3000; Website URL → your project URL (e.g. your GitHub repo). Leave Organization name, Organization URL, Terms of Service, and Privacy Policy blank. Click Save.",
+          "Back on the Apps page, under OAuth 1.0 Keys: click \"Show\" next to Consumer Key to reveal your API Key and API Key Secret. Click \"Generate\" next to Access Token — confirm it says \"Read and write\" beneath it — to get your Access Token and Access Token Secret.",
+          "Save all four values immediately — the secrets are only shown once. Copy them into the fields below."
         ],
-        "docsUrl": "https://developer.x.com/en/docs",
+        "docsUrl": "https://docs.x.com",
         "estimatedMinutes": 10,
-        "pricing": "Free tier: 1,500 tweets/month read. Basic ($200/mo): 3,000 tweets/month post."
+        "pricing": "Pay-per-use: $0.01/post, $0.005/read, $0.015/interaction. No fixed monthly fees."
       },
       "icon": "Twitter",
       "tags": ["social", "posting", "analytics", "engagement", "microblogging"]
