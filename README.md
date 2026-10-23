@@ -165,6 +165,10 @@ Open [http://localhost:3000](http://localhost:3000) and click **"Load Demo Data"
 4. **Click the 🚀 Launch button** on a task assigned to an agent — spawns a Claude Code session that executes the work (requires Claude Code)
 5. **Open Claude Code in this workspace** and run `/daily-plan` to see slash commands in action
 
+### One-Click Deploy
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/Mission%20Control/)
+
 ---
 
 ## How It Works
